@@ -1,0 +1,18 @@
+{
+  "name": "ussd-prototype",
+  "version": "1.0.0",
+  "description": "USSD prototype for Judiciary Land Assist",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": ["ussd", "node", "express", "mongodb", "africastalking"],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.20.3",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "mongoose": "^8.8.0"
+  }
+}
