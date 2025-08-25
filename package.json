@@ -6,11 +6,18 @@
   "scripts": {
     "start": "node server.js"
   },
-  "keywords": ["ussd", "node", "express", "mongodb", "africastalking"],
+  "keywords": [
+    "ussd",
+    "node",
+    "express",
+    "mongodb",
+    "africastalking"
+  ],
   "author": "",
   "license": "ISC",
   "dependencies": {
     "body-parser": "^1.20.3",
+    "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "mongoose": "^8.8.0"
