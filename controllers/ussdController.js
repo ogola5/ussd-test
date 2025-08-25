@@ -38,7 +38,6 @@ exports.handleUssd = async (req, res) => {
       const county = counties[input[1]] || "Other";
       const name = input[2];
 
-      // Save safely (ignore duplicates)
       await Profile.updateOne(
         { phoneNumber },
         { phoneNumber, name, county },
@@ -59,9 +58,6 @@ exports.handleUssd = async (req, res) => {
       if (foundCase) {
         response = `CON Case ${caseNo}:
 Status: ${foundCase.status}
-Next Date: 18-Sep-2025
-Court: 3
-Judge: Hon. X
 1. SMS me
 2. Back`;
       } else {
@@ -92,14 +88,14 @@ Judge: Hon. X
       };
       const issueType = issueTypes[input[1]] || "Other";
 
-      await Case.create({
+      const newCase = await Case.create({
         phoneNumber,
         caseType: `Land Issue - ${issueType}`,
         description: input[2],
-        status: "Open"
+        status: "Pending"   // always start as Pending
       });
 
-      response = "END ✅ Ticket created successfully. Ref number sent via SMS.";
+      response = `END ✅ Ticket created successfully. Ref: CASE-${newCase._id.toString().slice(-5)}`;
     }
 
     // ---- Book Mediation ----

@@ -6,7 +6,17 @@ const caseSchema = new mongoose.Schema({
   county: { type: String },
   description: { type: String },                // For land issues
   caseNumber: { type: String },                 // For check-case feature
-  status: { type: String, default: "Pending" },
+  status: { 
+    type: String, 
+    enum: ["Pending", "In Progress", "Resolved", "Closed"], 
+    default: "Pending" 
+  },
+  updates: [
+    {
+      message: String,
+      date: { type: Date, default: Date.now }
+    }
+  ],
   createdAt: { type: Date, default: Date.now }
 });
 
