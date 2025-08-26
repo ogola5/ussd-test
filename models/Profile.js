@@ -1,10 +1,10 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
-const profileSchema = new mongoose.Schema({
+const ProfileSchema = new mongoose.Schema({
   phoneNumber: { type: String, required: true, unique: true },
   name: { type: String, required: true },
   county: { type: String, required: true },
-  createdAt: { type: Date, default: Date.now }
-});
+  role: { type: String, enum: ["User", "Admin"], default: "User" },
+}, { timestamps: true });
 
-module.exports = mongoose.model('Profile', profileSchema);
+export default mongoose.model('Profile', ProfileSchema);

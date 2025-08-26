@@ -1,12 +1,11 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
-const mediationSchema = new mongoose.Schema({
+const MediationSchema = new mongoose.Schema({
   phoneNumber: { type: String, required: true },
   county: { type: String, required: true },
   date: { type: String, required: true },
   reason: { type: String, required: true },
-  status: { type: String, default: "Pending" },
-  createdAt: { type: Date, default: Date.now }
-});
+  status: { type: String, enum: ["Pending", "In Progress", "Completed"], default: "Pending" },
+}, { timestamps: true });
 
-module.exports = mongoose.model('Mediation', mediationSchema);
+export default mongoose.model('Mediation', MediationSchema);

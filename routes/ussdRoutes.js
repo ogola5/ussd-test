@@ -1,7 +1,8 @@
-const express = require('express');
+import express from 'express';
+import { handleUssd } from '../controllers/ussdController.js';
+
 const router = express.Router();
-const { handleUssd } = require('../controllers/ussdController');
 
 router.post('/', handleUssd);
 
-module.exports = router;
+export default router;

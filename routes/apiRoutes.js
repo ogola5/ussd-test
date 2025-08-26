@@ -1,8 +1,9 @@
-const express = require("express");
+import express from "express";
+import Case from "../models/Case.js";
+import Profile from "../models/Profile.js";
+import Mediation from "../models/Mediation.js";
+
 const router = express.Router();
-const Case = require("../models/Case");
-const Profile = require("../models/Profile");
-const Mediation = require("../models/Mediation");
 
 // ✅ Get all cases
 router.get("/cases", async (req, res) => {
@@ -70,4 +71,4 @@ router.get("/mediations", async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

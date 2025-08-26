@@ -1,6 +1,7 @@
 {
   "name": "ussd-prototype",
   "version": "1.0.0",
+  "type": "module",
   "description": "USSD prototype for Judiciary Land Assist",
   "main": "server.js",
   "scripts": {
@@ -16,10 +17,16 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "bcryptjs": "^3.0.2",
     "body-parser": "^1.20.3",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
-    "express": "^4.19.2",
-    "mongoose": "^8.8.0"
+    "express": "^4.21.2",
+    "express-validator": "^7.2.1",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.18.0",
+    "morgan": "^1.10.1",
+    "multer": "^2.0.2",
+    "nodemailer": "^7.0.5"
   }
 }
