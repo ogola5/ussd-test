@@ -43,6 +43,7 @@ import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
 import connectDB from "./config/db.js";
+import bodyParser from "body-parser";
 
 // Load env vars
 dotenv.config();
@@ -59,8 +60,8 @@ app.use(
 );
 
 // ✅ Body parsing
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
 
 // ✅ Core Routes
 import ussdRoutes from "./routes/ussdRoutes.js";
