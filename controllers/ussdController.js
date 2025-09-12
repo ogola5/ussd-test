@@ -9,24 +9,23 @@ export const handleUssd = async (req, res) => {
   let response = "";
 
   try {
-    // 1️⃣ Ensure a minimal profile exists (phone + default lang)
+    // Ensure a minimal profile
     let profile = await Profile.findOne({ phoneNumber });
-    if (!profile) {
-      profile = await Profile.create({ phoneNumber, language: "en" });
-    }
+    if (!profile) profile = await Profile.create({ phoneNumber });
+
     const lang = profile.language || "en";
 
-    // === 0. First Screen: if empty, ask language if not yet set ===
+    // === FIRST DIAL ===
     if (text === "") {
+      // if language not set, ask once
       if (!profile.languageSet) {
-        response = "CON Select Language:\n1. English\n2. Kiswahili";
-        return send(res, response);
+        return send(res, "CON Select Language:\n1. English\n2. Kiswahili");
       }
-      response = `CON ${messages[lang].main}`;
-      return send(res, response);
+      // otherwise go straight to main menu in chosen language
+      return send(res, `CON ${messages[lang].main}`);
     }
 
-    // === 0a. Handle first-time language selection ===
+    // === HANDLE FIRST-TIME LANGUAGE SELECTION ===
     if (!profile.languageSet) {
       if (input[0] === "1" || input[0] === "2") {
         const newLang = input[0] === "2" ? "sw" : "en";
@@ -34,37 +33,32 @@ export const handleUssd = async (req, res) => {
           { phoneNumber },
           { $set: { language: newLang, languageSet: true } }
         );
-        return send(res, `END ✅ Language set. Dial again to continue.`);
+        return send(res, `END ✅ Language set to ${newLang === "sw" ? "Kiswahili" : "English"}. Dial again to continue.`);
       }
-      return send(res, "END Invalid choice. Dial again.");
+      return send(res, "END ❌ Invalid choice. Dial again.");
     }
 
-    // ===== Main Menu Options =====
+    // ===== MAIN MENU AFTER LANGUAGE CHOSEN =====
     switch (input[0]) {
-      case "1": // Register / Update My Details
+      case "1":
         response = await handleProfile(input, phoneNumber, lang);
         break;
-
-      case "2": // Report Land Dispute
+      case "2":
         if (!profile.name || !profile.county) {
-          response = "END ⚠️ Please register your Name & County first (Menu 1).";
+          response = messages[lang].needProfile; // e.g. "Please register first."
         } else {
           response = await handleDispute(input, profile, lang);
         }
         break;
-
-      case "3": // Track My Cases
+      case "3":
         response = await handleTracking(input, profile, lang);
         break;
-
-      case "4": // Whistleblowing
-        response = await handleWhistle(input);
+      case "4":
+        response = await handleWhistle(input, lang);
         break;
-
-      case "5": // Land Rights Info
-        response = `END Land Rights:\n- Secure title deeds.\n- Community rights protected.\nVisit nearest Land Office.`;
+      case "5":
+        response = messages[lang].rightsInfo;
         break;
-
       default:
         response = `END ❌ ${messages[lang].invalid}`;
     }
@@ -75,6 +69,8 @@ export const handleUssd = async (req, res) => {
     send(res, "END ⚠️ System error. Try again later.");
   }
 };
+
+// ---------- Helper functions (same as before, all use `lang` for messages) ----------
 
 // ---------- Helper Handlers ----------
 
