@@ -1,5 +1,5 @@
 import express from "express";
-import { protect } from "../middleware/authMiddleware.js";
+
 import {
   getDashboardStats,
   listCases,
@@ -12,12 +12,12 @@ import {
 
 const router = express.Router();
 
-router.get("/stats", protect, getDashboardStats);
-router.get("/cases", protect, listCases);
-router.patch("/cases/:id", protect, updateCase);
-router.get("/profiles", protect, listProfiles);
-router.get("/whistles", protect, listWhistles);
-router.patch("/whistles/:id", protect, updateWhistleStatus);
-router.get("/analytics/county", protect, countyAnalytics);
+router.get("/stats", getDashboardStats);
+router.get("/cases", listCases);
+router.patch("/cases/:id", updateCase);
+router.get("/profiles", listProfiles);
+router.get("/whistles", listWhistles);
+router.patch("/whistles/:id", updateWhistleStatus);
+router.get("/analytics/county", countyAnalytics);
 
 export default router;
