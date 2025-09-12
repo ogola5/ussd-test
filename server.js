@@ -1,39 +1,40 @@
-// server.js
 import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
-import connectDB from "./config/db.js";
 import bodyParser from "body-parser";
+import connectDB from "./config/db.js";
 
-// Load environment variables
 dotenv.config();
-
 const app = express();
 
-// Enable CORS for all origins
 app.use(
   cors({
     origin: "*",
-    methods: ["GET", "POST"],
-    allowedHeaders: ["Content-Type"],
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
-
-// Parse incoming requests
-app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: false }));
 
-// === USSD Only ===
+// Routes
 import ussdRoutes from "./routes/ussdRoutes.js";
+import authRoutes from "./routes/authRoutes.js";
+import adminRoutes from "./routes/adminRoutes.js";
+
 app.use("/ussd", ussdRoutes);
+app.use("/api/admin", authRoutes); // <-- Admin signup/login/profile
+app.use("/api/admin", adminRoutes);
+
 
 const PORT = process.env.PORT || 5001;
 
-// Connect to DB and start server
 const startServer = async () => {
   try {
     await connectDB();
-    app.listen(PORT, () => console.log(`🚀 USSD server running on port ${PORT}`));
+    app.listen(PORT, () =>
+      console.log(`🚀 Server running on http://localhost:${PORT}`)
+    );
   } catch (err) {
     console.error("❌ Failed to start server:", err.message);
     process.exit(1);

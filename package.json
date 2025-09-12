@@ -5,8 +5,10 @@
   "description": "USSD prototype for Judiciary Land Assist",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "dev": "nodemon server.js"
   },
+
   "keywords": [
     "ussd",
     "node",
@@ -28,5 +30,8 @@
     "morgan": "^1.10.1",
     "multer": "^2.0.2",
     "nodemailer": "^7.0.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10"
   }
 }
