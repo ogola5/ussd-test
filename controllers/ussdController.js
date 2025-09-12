@@ -1,146 +1,119 @@
-
-
-
+// controllers/ussdController.js
 import Case from "../models/Case.js";
 import Profile from "../models/Profile.js";
 import Mediation from "../models/Mediation.js";
+import Whistle from "../models/Whistle.js";
+import { messages } from "../services/messages.js";
 
 export const handleUssd = async (req, res) => {
   const { text, phoneNumber } = req.body;
-  const input = text.split("*");
+  const input = text.split("*").filter(Boolean);
   let response = "";
 
   try {
-    // ---- Screen 1 - Welcome ----
+    // Check profile for language preference
+    const profile = await Profile.findOne({ phoneNumber }).lean();
+    const lang = profile?.language || "en";
+
+    // === Main Menu ===
     if (text === "") {
-      response = `CON Welcome to Judiciary Land Assist
-1. Check Case
-2. Report Land Issue
-3. Book Mediation
-4. Contacts
-5. My Profile`;
+      response = `CON ${messages[lang].main}`;
     }
 
-    // ---- My Profile ----
-    else if (input[0] === "5" && input.length === 1) {
-      const profile = await Profile.findOne({ phoneNumber }).lean();
-      if (profile) {
-        response = `END Profile already exists:\nName: ${profile.name}\nCounty: ${profile.county}`;
-      } else {
-        response = `CON Select County:
-1. Nairobi
-2. Kiambu
-3. Machakos`;
+    // === 1. Track Case ===
+    else if (input[0] === "1") {
+      if (input.length === 1) response = "CON Enter Case ID:";
+      else if (input.length === 2) {
+        const found = await Case.findOne({ caseNumber: input[1] }).lean();
+        response = found
+          ? `END Case ${found.caseNumber}\nStatus: ${found.status}`
+          : "END ❌ Case not found.";
       }
     }
-    else if (input[0] === "5" && input.length === 2) {
-      response = "CON Enter your Name:";
-    }
-    else if (input[0] === "5" && input.length === 3) {
-      const counties = { "1": "Nairobi", "2": "Kiambu", "3": "Machakos" };
-      const county = counties[input[1]] || "Other";
-      const name = input[2];
 
-      await Profile.updateOne(
-        { phoneNumber },
-        { phoneNumber, name, county },
-        { upsert: true }
-      );
-
-      response = `END ✅ Profile saved successfully.\nName: ${name}, County: ${county}`;
-    }
-
-    // ---- Check Case ----
-    else if (input[0] === "1" && input.length === 1) {
-      response = "CON Enter Case No. (e.g., ELC/E001/2023):";
-    }
-    else if (input[0] === "1" && input.length === 2) {
-      const caseNo = input[1];
-      const foundCase = await Case.findOne({ caseNumber: caseNo }).lean();
-
-      if (foundCase) {
-        response = `CON Case ${caseNo}:
-Status: ${foundCase.status}
-1. SMS me
-2. Back`;
-      } else {
-        response = "END ❌ Case not found in the system.";
+    // === 2. Log New Dispute ===
+    else if (input[0] === "2") {
+      if (input.length === 1) {
+        response = `CON Select Land Type:
+1. Titled Land
+2. Sale Agreement
+3. Community/Customary`;
+      } else if (input.length === 2) {
+        response = "CON Enter a short description:";
+      } else if (input.length === 3) {
+        const types = { "1": "TITLED", "2": "SALE_AGREEMENT", "3": "COMMUNITY" };
+        const landType = types[input[1]] || "OTHER";
+        const caseNumber = `LND-${Date.now().toString().slice(-6)}`;
+        await Case.create({
+          phoneNumber,
+          caseNumber,
+          description: input[2],
+          landType
+        });
+        response = `END ✅ Dispute logged. Case ID: ${caseNumber}`;
       }
     }
-    else if (input[0] === "1" && input.length === 3 && input[2] === "1") {
-      response = "END ✅ Case details will be sent via SMS.";
+
+    // === 3. Land Rights ===
+    else if (input[0] === "3") {
+      response = `END Land Rights:\n- Secure title deeds.\n- Community rights protected.\nVisit nearest Land Office for more.`;
     }
 
-    // ---- Report Land Issue ----
-    else if (input[0] === "2" && input.length === 1) {
-      response = `CON Report Land Issue:
-1. Missing File
-2. Fraudulent Transfer
-3. Boundary
-4. Succession`;
-    }
-    else if (input[0] === "2" && input.length === 2) {
-      response = "CON Enter a short description:";
-    }
-    else if (input[0] === "2" && input.length === 3) {
-      const issueTypes = {
-        "1": "Missing File",
-        "2": "Fraudulent Transfer",
-        "3": "Boundary",
-        "4": "Succession"
-      };
-      const issueType = issueTypes[input[1]] || "Other";
-
-      const newCase = await Case.create({
-        phoneNumber,
-        caseType: `Land Issue - ${issueType}`,
-        description: input[2],
-        status: "Pending"
-      });
-
-      response = `END ✅ Ticket created successfully. Ref: CASE-${newCase._id.toString().slice(-5)}`;
-    }
-
-    // ---- Book Mediation ----
-    else if (input[0] === "3" && input.length === 1) {
-      response = `CON Select County:
-1. Nairobi
-2. Kiambu
-3. Machakos`;
-    }
-    else if (input[0] === "3" && input.length === 2) {
-      response = "CON Enter mediation reason:";
-    }
-    else if (input[0] === "3" && input.length === 3) {
-      response = "CON Enter preferred date (YYYY-MM-DD):";
-    }
-    else if (input[0] === "3" && input.length === 4) {
-      const counties = { "1": "Nairobi", "2": "Kiambu", "3": "Machakos" };
-      const county = counties[input[1]] || "Other";
-      const reason = input[2];
-      const date = input[3];
-
-      const newMediation = await Mediation.create({
-        phoneNumber, county, reason, date
-      });
-
-      response = `END ✅ Mediation booked for ${date} at ${county}. Ref: MED-${newMediation._id.toString().slice(-5)}`;
-    }
-
-    // ---- Contacts ----
+    // === 4. Whistleblowing ===
     else if (input[0] === "4") {
-      response = `END Judiciary Contacts:
-Nairobi: 020-1234567
-Kiambu: 020-7654321
-Machakos: 020-1112233`;
+      if (input.length === 1) response = "CON Enter County:";
+      else if (input.length === 2) response = "CON Enter description:";
+      else if (input.length === 3) {
+        await Whistle.create({
+          county: input[1],
+          description: input[2],
+          anonymous: true
+        });
+        response = "END ✅ Report submitted anonymously.";
+      }
+    }
+
+    // === 5. Language Settings ===
+    else if (input[0] === "5") {
+      if (input.length === 1) {
+        response = "CON Select Language:\n1. English\n2. Kiswahili";
+      } else if (input.length === 2) {
+        const newLang = input[1] === "2" ? "sw" : "en";
+        await Profile.updateOne(
+          { phoneNumber },
+          { $set: { language: newLang } },
+          { upsert: true }
+        );
+        response = "END ✅ Language updated.";
+      }
+    }
+
+    // === 6. My Profile ===
+    else if (input[0] === "6") {
+      if (input.length === 1) {
+        if (profile) {
+          response = `END Name: ${profile.name}\nCounty: ${profile.county}`;
+        } else {
+          response = "CON Enter your Name:";
+        }
+      } else if (input.length === 2) {
+        response = "CON Enter County:";
+      } else if (input.length === 3) {
+        await Profile.updateOne(
+          { phoneNumber },
+          { name: input[1], county: input[2], language: lang },
+          { upsert: true }
+        );
+        response = `END ✅ Profile saved.`;
+      }
     }
 
     else {
-      response = "END ❌ Invalid choice.";
+      response = `END ❌ ${messages[lang].invalid}`;
     }
   } catch (err) {
-    console.error("❌ USSD Error:", err.message);
-    response = "END ⚠️ Sorry, something went wrong. Please try again.";
+    console.error("USSD Error:", err);
+    response = "END ⚠️ System error. Try again later.";
   }
 
   res.set("Content-Type", "text/plain");
